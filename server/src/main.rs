@@ -9,7 +9,7 @@ mod db_utils;
 mod schema;
 mod actors;
 
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, delete, get, patch, post, put, web::{self, Data, Json, Path}};
+use actix_web::{App, HttpResponse, HttpServer, Responder, delete, get, post, put, web::{Data, Json, Path}};
 
 use actix::SyncArbiter;
 use actors::db::{Create, DbActor, Delete, GetArticles, Publish, Update};
@@ -18,7 +18,7 @@ use models::{AppState, ArticleData};
 use serde::{Deserialize, Serialize};
 use std::env;
 use uuid::Uuid;
-
+use actix_cors::Cors;
 
 #[post("/new")]
 async fn create_article(article: Json<ArticleData>, state: Data<AppState>) -> impl Responder {
@@ -75,6 +75,13 @@ async fn get_published(state: Data<AppState>) -> impl Responder {
     }
 }
 
+#[get("/")]
+async fn root() -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body(r#"[{"id":"1","title":"こんな題名"}]"#)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let db_url = env::var("DATABASE_URL").expect("Error retrieving the database url");
@@ -83,7 +90,13 @@ async fn main() -> std::io::Result<()> {
     let db_addr = SyncArbiter::start(5, move || DbActor(pool.clone())) ;
 
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin_fn(|origin, _req_head| {
+                true
+            });
         App::new()
+            .wrap(cors)
+            .service(root)
             .service(get_published)
             .service(delete_article)
             .service(publish_article)

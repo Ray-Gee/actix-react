@@ -3,6 +3,7 @@
 
 ```
 make watch  
+cargo watch
 cd front  
 yarn start  
 ```

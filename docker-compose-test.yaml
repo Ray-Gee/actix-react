@@ -1,7 +1,7 @@
 version: "3.4"
 services:
-  actix_api_test:
-    container_name: "actix_api_test"
+  actix_react:
+    container_name: "actix_react"
     build:
       context: .
       dockerfile: "Dockerfile.test"
